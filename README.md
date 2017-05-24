@@ -42,58 +42,7 @@ Like [Spring XD](http://spring.io/projects/spring-xd) and numerous other distrib
 
 Zookeeper is very present in your interactions with Apache Kafka. Apache Kafka has, for example, two different APIs for acting as a consumer. The higher level API is simpler to get started with and it handles all the nuances of handling partitioning and so on. It will need a reference to a Zookeeper instance to keep the coordination state.  
 
-Let's turn now turn to using Apache Kafka with Spring.
 
-## Using Apache Kafka with Spring Integration
-The recently released [Apache Kafka 1.1 Spring Integration adapter]() is very powerful, and provides inbound adapters for working with both the lower level Apache Kafka API as well as the higher level API.
 
-The adapter, currently, is XML-configuration first, though work is already underway on a Spring Integration Java configuration DSL for the adapter and milestones are available. We'll look at both here, now.
-
-To make all these examples work, I added the [libs-milestone-local Maven  repository](http://repo.spring.io/simple/libs-milestone-local) and used the following dependencies:
-
-- org.apache.kafka:kafka_2.10:0.8.1.1
-- org.springframework.boot:spring-boot-starter-integration:1.2.3.RELEASE
-- org.springframework.boot:spring-boot-starter:1.2.3.RELEASE
-- org.springframework.integration:spring-integration-kafka:1.1.1.RELEASE
-- org.springframework.integration:spring-integration-java-dsl:1.1.0.M1
-
-### Using the Spring Integration Apache Kafka with the Spring Integration XML DSL
-
-First, let's look at how to use the Spring Integration outbound adapter to send `Message<T>` instances from a Spring Integration flow to an external Apache Kafka instance. The example is fairly  straightforward: a Spring Integration `channel` named `inputToKafka` acts as a conduit that forwards `Message<T>` messages to the outbound adapter, `kafkaOutboundChannelAdapter`. The adapter itself can take its configuration from the defaults specified in the `kafka:producer-context` element or it from the adapter-local configuration overrides. There may be one or many configurations in a given `kafka:producer-context` element.
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:int="http://www.springframework.org/schema/integration"
-       xmlns:int-kafka="http://www.springframework.org/schema/integration/kafka"
-       xmlns:task="http://www.springframework.org/schema/task"
-       xsi:schemaLocation="http://www.springframework.org/schema/integration/kafka http://www.springframework.org/schema/integration/kafka/spring-integration-kafka.xsd
-		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
-
-    <int:channel id="inputToKafka">
-        <int:queue/>
-    </int:channel>
-
-    <int-kafka:outbound-channel-adapter
-            id="kafkaOutboundChannelAdapter"
-            kafka-producer-context-ref="kafkaProducerContext"
-            channel="inputToKafka">
-        <int:poller fixed-delay="1000" time-unit="MILLISECONDS" receive-timeout="0" task-executor="taskExecutor"/>
-    </int-kafka:outbound-channel-adapter>
-
-    <task:executor id="taskExecutor" pool-size="5" keep-alive="120" queue-capacity="500"/>
-
-    <int-kafka:producer-context id="kafkaProducerContext">
-        <int-kafka:producer-configurations>
-            <int-kafka:producer-configuration broker-list="localhost:9092"
-                                              topic="event-stream"
-                                              compression-codec="default"/>
-        </int-kafka:producer-configurations>
-    </int-kafka:producer-context>
-
-</beans>
 
 
